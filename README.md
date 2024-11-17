@@ -1,6 +1,6 @@
 # sensing-ce-xlmimo
 
-Codes and Slides (pending) for journal paper "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems", accepted to IEEE JSAC-NGAT'24.
+Codes and Slides (pending) for journal paper "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems", accepted to IEEE JSAC-NGAT'24. [arXiv](https://arxiv.org/abs/2403.11809)
 
 If you have any questions, please create an issue or contact [Shicong Liu](mailto:sc.liu@my.cityu.edu.hk) for help :-D
 

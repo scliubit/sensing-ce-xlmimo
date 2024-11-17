@@ -1,7 +1,7 @@
 close all
 clear all
 clc
-rng(18)
+rng(30)
 addpath("../utils/")
 %% demo on how it works
 
@@ -28,7 +28,7 @@ L_NLoS = 3;
 % initialize uplink channel and calculate recv pattern
 recv_pattern = cal_recv_pattern(array_x,array_y,x_s,y_s,k,1);
 if noise_en
-    recv_pattern_n = awgn(recv_pattern,100,'measured');
+    recv_pattern_n = awgn(recv_pattern,10,'measured');
 end
 coord_x = [x_s];
 coord_y = [y_s];
@@ -42,6 +42,7 @@ while(1)
         continue
     end
     recv_pattern = recv_pattern+sqrt(1)*cal_recv_pattern(array_x,array_y,x_ell,y_ell,k,1);
+    recv_pattern_n = recv_pattern_n+sqrt(1)*cal_recv_pattern(array_x,array_y,x_ell,y_ell,k,1);
     coord_x = [coord_x,x_ell];
     coord_y = [coord_y,y_ell];
     cnt=cnt+1;
@@ -66,46 +67,45 @@ scatter_coord.y = coord_y(2:end);
 
 ref_pattern = 10*exp(1j*rand(N_BS,1)*2*pi);
 hologram = abs(recv_pattern+ref_pattern).^2-abs(ref_pattern).^2-abs(recv_pattern).^2;
+hologram_n = abs(recv_pattern_n+ref_pattern).^2-abs(ref_pattern).^2-abs(recv_pattern_n).^2;
 y_grid = 1:0.05:23;
 
 %% fast impl, fft
 tic
 x_size=3;
 HR = ref_pattern.*hologram;
-% HR_padded = [zeros((x_size-0.5)*N_BS,1);HR;zeros((x_size-0.5)*N_BS,1)];
+HR_n = ref_pattern.*hologram_n;
+
 HR_padded = [zeros((x_size-0.5)*N_BS,1);HR;zeros((x_size-0.5)*N_BS,1)];
+HR_padded_n = [zeros((x_size-0.5)*N_BS,1);HR_n;zeros((x_size-0.5)*N_BS,1)];
 x_recon_plane = linspace(-aperture*x_size,aperture*x_size,2*x_size*N_BS);%
 rec_grid_fft = zeros(numel(x_recon_plane),numel(y_grid));
+rec_grid_fft_n = zeros(numel(x_recon_plane),numel(y_grid));
 for y_idx = 1:numel(y_grid)
     y_s_trg = y_grid(y_idx);
     projection = exp(1j*k*sqrt((x_recon_plane).^2+y_s_trg^2));%./sqrt((x_recon_plane).^2+y_s_trg^2)*y_s_trg;
     rad_pattern = fftshift(ifft((fft(HR_padded)).*(fft(projection.'))))/N_BS;
     rec_grid_fft(:,y_idx) = rad_pattern;
+    rec_grid_fft_n(:,y_idx) = fftshift(ifft((fft(HR_padded_n)).*(fft(projection.'))))/N_BS;;
 end
 
 % figure(1)
 figure1 = figure;
 % subplot(121)
 surf(x_recon_plane,y_grid,abs(rec_grid_fft)')
-% colormap(flipud(gray))
 hold on
 [max_value, max_idx] = max(abs(rec_grid_fft(:)));
 [max_row, max_col] = ind2sub(size(rec_grid_fft), max_idx);
 x_hat = x_recon_plane(max_row);
 y_hat = y_grid(max_col);
-% plot3(x_hat,y_hat,max_value,'rv',MarkerSize=15,LineWidth=3)
-% title('Time Inversion Near-field Reconstruction ($L=3$)',Interpreter='latex')
 shading interp
 view([0,0,1])
-% view([1,-1,1])
-
-% axis('square')
 axis('tight')
 axis('equal')
 xlabel('$x$ [m]',Interpreter='latex')
 ylabel('$y$ [m]',Interpreter='latex')
 zlabel('$\vert \tilde{E} ({\bf r})\vert$',Interpreter='latex')
-% legend('', 'LoS','',Interpreter='latex')
+
 if ismac
     set(gca,'fontsize',14);
     set(gca,'fontname','Times New Roman')
@@ -117,7 +117,6 @@ for i =1:N_BS
     plot3(array_x(i),0,0,'r.')
 end
 toc
-
 %% detection
 thres = max_value/2;
 pks_list = [];
@@ -151,6 +150,68 @@ for i=1:4
     plot3([x_coord(idx_i_max),x_coord(idx_i_max)],[y_coord(idx_i_max),y_coord(idx_i_max)],[0,pks_i(idx_max)],'r--',LineWidth=2)
 end
 
+%% noisy
+figure1n = figure;
+% subplot(121)
+surf(x_recon_plane,y_grid,abs(rec_grid_fft_n)')
+hold on
+[max_value, max_idx] = max(abs(rec_grid_fft_n(:)));
+[max_row, max_col] = ind2sub(size(rec_grid_fft_n), max_idx);
+x_hat = x_recon_plane(max_row);
+y_hat = y_grid(max_col);
+shading interp
+view([0,0,1])
+axis('tight')
+axis('equal')
+xlabel('$x$ [m]',Interpreter='latex')
+ylabel('$y$ [m]',Interpreter='latex')
+zlabel('Noisy $\vert \tilde{E} ({\bf r})\vert$',Interpreter='latex')
+
+if ismac
+    set(gca,'fontsize',14);
+    set(gca,'fontname','Times New Roman')
+end
+box on
+
+for i =1:N_BS
+    plot3(array_x(i),0,0,'r.')
+end
+toc
+%% detection
+thres = max_value/3;
+pks_list = [];
+locs_list = [];
+y_list = [];
+w_list = [];
+for i=1:numel(y_grid)
+    if max(abs(rec_grid_fft_n(:,i)))<thres
+        continue
+    else
+        [pks,locs,w,p] = findpeaks(abs(rec_grid_fft_n(:,i)),'MinPeakHeight',thres);
+        locs_list = [locs_list;locs];
+        y_list = [y_list;zeros(numel(locs),1)+i];
+        pks_list = [pks_list;pks];
+        w_list = [w_list;w];
+    end
+end
+x_coord = x_recon_plane(locs_list);
+y_coord = y_grid(y_list);
+X = [x_coord',y_coord'];
+[idx,C] = kmeans(X,L_NLoS+1);
+for i=1:4
+    idx_i = find(idx==i);
+    pks_i = pks_list(idx_i);
+    w_i = w_list(idx_i);
+    [~,idx_max] = max(pks_i);
+    [~,idx_min] = min(w_i);
+    idx_i_max = idx_i(idx_max);
+    idx_i_min = idx_i(idx_min);
+    plot3(x_coord(idx_i_max),y_coord(idx_i_max),pks_i(idx_max),'ro',MarkerSize=12,LineWidth=3)
+    plot3([x_coord(idx_i_max),x_coord(idx_i_max)],[y_coord(idx_i_max),y_coord(idx_i_max)],[0,pks_i(idx_max)],'r--',LineWidth=2)
+end
+
+
+%% another view
 figure2 = figure;
 copyobj(get(figure1, 'Children'), figure2);
 

@@ -1,6 +1,8 @@
 clear all
 close all
-%%
+%% MUSIC algorithm takes veeeery long time.
+
+addpath('../utils/')
 fc = 28e9;
 c = physconst('Lightspeed');
 lambda = c/fc;
@@ -19,7 +21,7 @@ NT_coord.y = zeros(1,N);
 UE_range_x = 2;
 UE_range_y_min = 2;
 UE_range_y_max = 20;
-implementations = 100;
+implementations = 1000;
 G_distance = 20;
 G_angle = N*8;
 % sampleRatio=[0.25, 0.4, 0.6];
@@ -33,7 +35,7 @@ for beta = [1,2,3]
     error_MUSIC = zeros(1,numel(implementations));
     error_OMP = zeros(1,numel(implementations));
     error_HOLO = zeros(1,numel(implementations));
-    [~,Psi_POL,~,index2coor] = dict_design(N_UE,N,aperture,k,UE_range_y_min,UE_range_y_max,UE_range_x,beta);
+    [~,Psi_POL,~,index2coor] = dict_design_red(N_UE,N,aperture,k,UE_range_y_min,UE_range_y_max,UE_range_x,beta);
     tic
     for imple = 1:implementations
         if mod(imple,500)==0
@@ -58,7 +60,7 @@ for beta = [1,2,3]
         %     norm(H_NLoS,'fro')^2/norm(H_LoS,'fro')^2
         % MUSIC
         H_Upink = H_Downlink';
-        
+
         sampleNum = ceil(0.5*N);
         y_ = zeros(sampleNum,1);
         Phi = zeros(sampleNum,N*N_UE);
@@ -75,7 +77,8 @@ for beta = [1,2,3]
             Phi(m,:) = kron(f_norm.',w_norm);
         end
         %% MUSIC
-%         Phi = eye(256,256);
+        %         if false
+        %         Phi = eye(256,256);
         R = (Phi'*Phi*H_Upink)*(Phi'*Phi*H_Upink)';
         % perform MUSIC
         [~,~,V] = svd(R');
@@ -108,12 +111,15 @@ for beta = [1,2,3]
         x_hat = index2coor(index,2);
         error = sqrt((x_hat-UE.x)^2+(y_hat-UE.y)^2);
         error_OMP(imple) = error;
+        %         end
+
         % hologram
         recv_pattern = 0;
         for i = 1:N_UE
             recv_pattern = recv_pattern+cal_recv_pattern(NT_coord.x',NT_coord.y',NR_coord.x(i),NR_coord.y(i),k,1)/sqrt(N_UE);
         end
         ref_pattern = 10*exp(1j*rand(N,1)*2*pi);
+        ref_pattern = awgn(ref_pattern,10,'measured'); % wont affect results
         hologram = abs(recv_pattern+ref_pattern).^2-abs(ref_pattern).^2-abs(recv_pattern).^2;
         y_grid = linspace(UE_range_y_min,UE_range_y_max,G_distance*beta);
         x_size=4;
@@ -138,7 +144,10 @@ for beta = [1,2,3]
     end
     toc
     %%
-    save(['error_MUSICc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_MUSIC')
-    save(['error_OMPc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_OMP')
-    save(['error_HOLOc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_HOLO')
+    if implementations>=1000
+        save(['../results/error_MUSICc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_MUSIC')
+        save(['../results/error_OMPc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_OMP')
+        save(['../results/error_HOLOc_' num2str(implementations) '_' num2str(beta) '.mat'],'error_HOLO')
+    end
 end
+rmpath('../utils/')
