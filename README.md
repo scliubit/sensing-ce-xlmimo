@@ -12,7 +12,7 @@ If you have any questions, please create an issue or contact [Shicong Liu](mailt
 ```bibtex
 @article{liu2024sensing,
   title={Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems},
-  author={S. Liu, X. Yu, Z. Gao, J. Xu, D. W. K. Ng, and S. Cui},
+  author={Liu, Shicong and Yu, Xianghao and Gao, Zhen and Xu, Jie and Ng, Derrick Wing Kwan and Cui, Shuguang},
   journal={IEEE J. Sel. Areas Commun.},
   year={2024},
   note={{\it to appear}}
