@@ -1,6 +1,6 @@
 # sensing-ce-xlmimo
 
-Codes and Slides (pending) for journal paper "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems", accepted to IEEE JSAC-NGAT'24. [arXiv](https://arxiv.org/abs/2403.11809)
+Codes and Slides (pending) for journal paper "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems", accepted to IEEE JSAC-NGAT'24. [arXiv](https://arxiv.org/abs/2403.11809), [IEEE](https://ieeexplore.ieee.org/document/10845870).
 
 # How to use
 
@@ -14,13 +14,16 @@ If you have any questions, please create an issue or contact [Shicong Liu](mailt
   title={Sensing-Enhanced Channel Estimation for Near-Field {XL-MIMO} Systems},
   author={Liu, Shicong and Yu, Xianghao and Gao, Zhen and Xu, Jie and Ng, Derrick Wing Kwan and Cui, Shuguang},
   journal={IEEE J. Sel. Areas Commun.},
-  year={2024},
-  note={{\it to appear}}
+  year={2025},
+  volume={43},
+  number={3},
+  pages={628-643},
+  month={March},
 }
 ```
 
 `plain text`
 ```
-S. Liu, X. Yu, Z. Gao, J. Xu, D. W. K. Ng, and S. Cui, "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems," {\em IEEE J. Sel. Areas Commun.}, 2024. {\it to appear}.
+S. Liu, X. Yu, Z. Gao, J. Xu, D. W. K. Ng, and S. Cui, "Sensing-Enhanced Channel Estimation for Near-Field XL-MIMO Systems," {\em IEEE J. Sel. Areas Commun.}, vol. 43, no. 3, pp. 628-643, March 2025.
 ```
 
